@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqua|Plus Terminplanung</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .print\:block {
+            display: none;
+        }
+        
+        @media print {
+            @page {
+                size: A2 landscape;
+                margin: 0mm;
+            }
+            
+            .print\:block {
+                display: block !important;
+            }
+            
+            .hidden {
+                display: block !important;
+            }
+            
+            * {
+                print-color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            
+            html, body {
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            /* Ensure the main container shows everything */
+            #root {
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            
+            #root > div {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            
+            /* Print the header */
+            .bg-white.border-b.border-gray-200 {
+                display: flex !important;
+                page-break-inside: avoid !important;
+            }
+            
+            /* Ensure main content area is visible */
+            .flex-1.flex.overflow-hidden {
+                display: flex !important;
+                overflow: visible !important;
+                height: auto !important;
+                page-break-inside: avoid !important;
+            }
+            
+            /* Task list panel */
+            .w-\\[692px\\] {
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: visible !important;
+            }
+            
+            /* Gantt chart area */
+            .gantt-chart {
+                overflow: visible !important;
+                page-break-inside: avoid !important;
+            }
+            
+            /* Print all tasks */
+            .overflow-y-auto {
+                overflow: visible !important;
+                max-height: none !important;
+                height: auto !important;
+            }
+            
+            /* Keep headers visible */
+            .sticky {
+                position: relative !important;
+            }
+            
+            /* Ensure project info panel prints if visible */
+            .fixed.inset-0 {
+                position: relative !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Lucide Icons as SVG components
+        const Plus = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        );
+
+        const Save = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+        );
+
+        const Download = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        );
+
+        const Upload = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+        );
+
+        const Printer = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+        );
+
+        const Users = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        );
+
+        const ChevronDown = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        );
+
+        const ChevronRight = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        );
+
+        const Trash2 = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        );
+
+        const Edit2 = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
+        );
+
+        const MessageSquare = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        );
+
+        const AlertCircle = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        );
+
+        const X = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        );
+
+        const MoreVertical = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+            </svg>
+        );
+
+        const ProjectManager = () => {
+            const [tasks, setTasks] = useState([
+                {
+                    id: 1,
+                    name: 'Auftragserteilung',
+                    start: new Date('2025-11-15'),
+                    duration: 5,
+                    progress: 80,
+                    assignee: 'Ilja Kotov',
+                    priority: 'Hoch',
+                    dependencies: [],
+                    milestone: null,
+                    children: [
+                        { id: 2, name: 'Liefertermin', start: new Date('2025-11-15'), duration: 2, progress: 100, assignee: 'Ilja Kotov', priority: 'Hoch', dependencies: [], milestone: new Date('2025-11-17'), children: [] },
+                        { id: 3, name: 'Inbetriebnahme', start: new Date('2025-11-17'), duration: 3, progress: 60, assignee: 'Ralf Stüber', priority: 'Mittel', dependencies: [2], milestone: null, children: [] }
+                    ],
+                    expanded: true
+                },
+                {
+                    id: 4,
+                    name: 'Entwicklungsphase',
+                    start: new Date('2025-11-20'),
+                    duration: 15,
+                    progress: 40,
+                    assignee: 'Entwicklungsteam',
+                    priority: 'Hoch',
+                    dependencies: [1],
+                    milestone: null,
+                    children: [
+                        { id: 5, name: 'Plannung', start: new Date('2025-11-20'), duration: 10, progress: 50, assignee: 'Jock Bartolo', priority: 'Hoch', dependencies: [3], milestone: new Date('2025-11-25'), children: [] },
+                        { id: 6, name: 'Vormontage', start: new Date('2025-11-22'), duration: 12, progress: 30, assignee: 'Hammel Jorge', priority: 'Hoch', dependencies: [3], milestone: null, children: [] },
+                        { id: 7, name: 'Auslieferung', start: new Date('2025-11-20'), duration: 3, progress: 100, assignee: 'Ralf Stüber', priority: 'Mittel', dependencies: [3], milestone: new Date('2025-11-23'), children: [] }
+                    ],
+                    expanded: true
+                },
+                {
+                    id: 8,
+                    name: 'Testing & QA',
+                    start: new Date('2025-12-05'),
+                    duration: 7,
+                    progress: 0,
+                    assignee: 'QA-Team',
+                    priority: 'Hoch',
+                    dependencies: [4],
+                    milestone: null,
+                    children: [],
+                    expanded: true
+                }
+            ]);
+
+            const [selectedTask, setSelectedTask] = useState(null);
+            const [viewMode, setViewMode] = useState('days');
+            const [filterPriority, setFilterPriority] = useState('all');
+            const [comments, setComments] = useState({});
+            const [newComment, setNewComment] = useState('');
+            const [showTeamOverview, setShowTeamOverview] = useState(false);
+            const [showProjectInfo, setShowProjectInfo] = useState(false);
+            const [projectInfo, setProjectInfo] = useState({
+                projektcode: '',
+                projekt: '',
+                kunde: '',
+                pm: '',
+                liefertermin: '',
+                ort: ''
+            });
+            const printRef = useRef();
+            const fileInputRef = useRef();
+
+            const getDateRange = () => {
+                const allDates = [];
+                const collectDates = (taskList) => {
+                    taskList.forEach(task => {
+                        allDates.push(new Date(task.start));
+                        const endDate = new Date(task.start);
+                        endDate.setDate(endDate.getDate() + task.duration);
+                        allDates.push(endDate);
+                        if (task.milestone) allDates.push(new Date(task.milestone));
+                        if (task.children) collectDates(task.children);
+                    });
+                };
+                collectDates(tasks);
+
+                const minDate = new Date(Math.min(...allDates));
+                const maxDate = new Date(Math.max(...allDates));
+                
+                // Add 1 day before first date and 3 months after last date
+                minDate.setDate(minDate.getDate() - 1);
+                maxDate.setMonth(maxDate.getMonth() + 3);
+                
+                return { minDate, maxDate };
+            };
+
+            const { minDate, maxDate } = getDateRange();
+
+            const generateTimeline = () => {
+                const timeline = [];
+                const current = new Date(minDate);
+                
+                while (current <= maxDate) {
+                    timeline.push(new Date(current));
+                    if (viewMode === 'days') {
+                        current.setDate(current.getDate() + 1);
+                    } else if (viewMode === 'weeks') {
+                        current.setDate(current.getDate() + 7);
+                    } else {
+                        current.setMonth(current.getMonth() + 1);
+                    }
+                }
+                
+                return timeline;
+            };
+
+            const timeline = generateTimeline();
+
+            const getTaskPosition = (task) => {
+                const dayWidth = viewMode === 'days' ? 40 : viewMode === 'weeks' ? 80 : 120;
+                const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+                const startOffset = Math.ceil((new Date(task.start) - minDate) / (1000 * 60 * 60 * 24));
+                
+                const left = (startOffset / totalDays) * (timeline.length * dayWidth);
+                const width = (task.duration / totalDays) * (timeline.length * dayWidth);
+                
+                return { left, width };
+            };
+
+            const getMilestonePosition = (milestoneDate) => {
+                const dayWidth = viewMode === 'days' ? 40 : viewMode === 'weeks' ? 80 : 120;
+                const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+                const offset = Math.ceil((new Date(milestoneDate) - minDate) / (1000 * 60 * 60 * 24));
+                
+                return (offset / totalDays) * (timeline.length * dayWidth);
+            };
+
+            const getISOWeek = (date) => {
+                const d = new Date(date);
+                d.setHours(0, 0, 0, 0);
+                d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                const yearStart = new Date(d.getFullYear(), 0, 1);
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return weekNo;
+            };
+
+            const getISOWeekYear = (date) => {
+                const d = new Date(date);
+                d.setHours(0, 0, 0, 0);
+                d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                return d.getFullYear();
+            };
+
+            const formatDate = (date, format = 'short') => {
+                const d = new Date(date);
+                if (format === 'short') {
+                    return `${d.getDate()}.${d.getMonth() + 1}`;
+                }
+                return d.toLocaleDateString('de-DE');
+            };
+
+            const flattenTasks = (taskList, level = 0) => {
+                let result = [];
+                taskList.forEach(task => {
+                    result.push({ ...task, level });
+                    if (task.expanded && task.children && task.children.length > 0) {
+                        result = result.concat(flattenTasks(task.children, level + 1));
+                    }
+                });
+                return result;
+            };
+
+            const flatTasks = flattenTasks(tasks);
+
+            const getTeamStats = () => {
+                const stats = {};
+                
+                // Collect all unique assignees from tasks (excluding "Nicht zugewiesen")
+                const allAssignees = new Set();
+                flatTasks.forEach(task => {
+                    if (task.assignee && task.assignee !== 'Nicht zugewiesen') {
+                        allAssignees.add(task.assignee);
+                    }
+                });
+                
+                // Convert to array and sort alphabetically
+                const teamMembers = Array.from(allAssignees).sort();
+                
+                teamMembers.forEach(member => {
+                    const memberTasks = flatTasks.filter(t => t.assignee === member);
+                    const completed = memberTasks.filter(t => t.progress === 100).length;
+                    const inProgress = memberTasks.filter(t => t.progress > 0 && t.progress < 100).length;
+                    const notStarted = memberTasks.filter(t => t.progress === 0).length;
+                    
+                    stats[member] = {
+                        total: memberTasks.length,
+                        completed,
+                        inProgress,
+                        notStarted
+                    };
+                });
+                
+                return stats;
+            };
+
+            const toggleExpand = (taskId) => {
+                const updateTasks = (taskList) => {
+                    return taskList.map(task => {
+                        if (task.id === taskId) {
+                            return { ...task, expanded: !task.expanded };
+                        }
+                        if (task.children) {
+                            return { ...task, children: updateTasks(task.children) };
+                        }
+                        return task;
+                    });
+                };
+                setTasks(updateTasks(tasks));
+            };
+
+            const addTask = (parentId = null) => {
+                // Find the highest ID in all tasks
+                const findMaxId = (taskList) => {
+                    let maxId = 0;
+                    taskList.forEach(task => {
+                        if (task.id > maxId) maxId = task.id;
+                        if (task.children && task.children.length > 0) {
+                            const childMaxId = findMaxId(task.children);
+                            if (childMaxId > maxId) maxId = childMaxId;
+                        }
+                    });
+                    return maxId;
+                };
+                
+                const maxId = findMaxId(tasks);
+                const newTask = {
+                    id: maxId + 1,
+                    name: 'Neue Aufgabe',
+                    start: new Date(),
+                    duration: 5,
+                    progress: 0,
+                    assignee: 'Nicht zugewiesen',
+                    priority: 'Mittel',
+                    dependencies: [],
+                    milestone: null,
+                    children: [],
+                    expanded: true
+                };
+
+                if (parentId === null) {
+                    setTasks([...tasks, newTask]);
+                } else {
+                    const addToParent = (taskList) => {
+                        return taskList.map(task => {
+                            if (task.id === parentId) {
+                                return { 
+                                    ...task, 
+                                    children: [...(task.children || []), newTask],
+                                    expanded: true
+                                };
+                            }
+                            if (task.children && task.children.length > 0) {
+                                return { 
+                                    ...task, 
+                                    children: addToParent(task.children) 
+                                };
+                            }
+                            return task;
+                        });
+                    };
+                    setTasks(addToParent(tasks));
+                }
+            };
+
+            const deleteTask = (taskId) => {
+                const removeTasks = (taskList) => {
+                    return taskList.filter(task => {
+                        if (task.id === taskId) return false;
+                        if (task.children) {
+                            task.children = removeTasks(task.children);
+                        }
+                        return true;
+                    });
+                };
+                setTasks(removeTasks(tasks));
+                setSelectedTask(null);
+            };
+
+            const updateTask = (taskId, updates) => {
+                const updateTasks = (taskList) => {
+                    return taskList.map(task => {
+                        if (task.id === taskId) {
+                            const updatedTask = { ...task, ...updates };
+                            if (selectedTask && selectedTask.id === taskId) {
+                                setSelectedTask(updatedTask);
+                            }
+                            return updatedTask;
+                        }
+                        if (task.children) {
+                            return { ...task, children: updateTasks(task.children) };
+                        }
+                        return task;
+                    });
+                };
+                setTasks(updateTasks(tasks));
+            };
+
+            useEffect(() => {
+                if (selectedTask) {
+                    const findTask = (taskList) => {
+                        for (const task of taskList) {
+                            if (task.id === selectedTask.id) {
+                                return task;
+                            }
+                            if (task.children) {
+                                const found = findTask(task.children);
+                                if (found) return found;
+                            }
+                        }
+                        return null;
+                    };
+                    const updatedTask = findTask(tasks);
+                    if (updatedTask) {
+                        setSelectedTask(updatedTask);
+                    }
+                }
+            }, [tasks, selectedTask]);
+
+            const addComment = (taskId) => {
+                if (!newComment.trim()) return;
+                
+                const comment = {
+                    id: Date.now(),
+                    text: newComment,
+                    author: 'Aktueller Benutzer',
+                    timestamp: new Date()
+                };
+                
+                setComments({
+                    ...comments,
+                    [taskId]: [...(comments[taskId] || []), comment]
+                });
+                setNewComment('');
+            };
+
+            const getPriorityColor = (priority) => {
+                switch(priority) {
+                    case 'Hoch':
+                    case 'High': return 'bg-red-500';
+                    case 'Mittel':
+                    case 'Medium': return 'bg-yellow-500';
+                    case 'Niedrig':
+                    case 'Low': return 'bg-green-500';
+                    default: return 'bg-gray-500';
+                }
+            };
+
+            const handlePrintToPDF = () => {
+                window.print();
+            };
+
+            const exportToCSV = () => {
+                let csv = 'ID,Name,Startdatum,Dauer (Tage),Fortschritt (%),Beauftragter,Priorität,Meilenstein,Ebene\n';
+                
+                const addTaskToCSV = (task, level = 0) => {
+                    const startDate = new Date(task.start).toLocaleDateString('de-DE');
+                    const milestoneDate = task.milestone ? new Date(task.milestone).toLocaleDateString('de-DE') : '';
+                    csv += `${task.id},"${task.name}",${startDate},${task.duration},${task.progress},"${task.assignee}",${task.priority},"${milestoneDate}",${level}\n`;
+                    
+                    if (task.children && task.children.length > 0) {
+                        task.children.forEach(child => addTaskToCSV(child, level + 1));
+                    }
+                };
+                
+                tasks.forEach(task => addTaskToCSV(task));
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `projektplan-${new Date().toLocaleDateString('de-DE').replace(/\./g, '-')}.csv`;
+                link.click();
+            };
+
+            // CSV Import Function
+            const importFromCSV = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const text = e.target.result;
+                        const lines = text.split('\n');
+                        
+                        // Skip header
+                        const dataLines = lines.slice(1).filter(line => line.trim());
+                        
+                        const importedTasks = [];
+                        const taskMap = new Map();
+                        
+                        dataLines.forEach(line => {
+                            // Parse CSV line (handle quoted values)
+                            const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+                            if (!matches || matches.length < 8) return;
+                            
+                            const [id, name, startDate, duration, progress, assignee, priority, milestone, level] = matches.map(v => v.replace(/^"|"$/g, '').trim());
+                            
+                            const task = {
+                                id: parseInt(id) || Date.now() + Math.random(),
+                                name: name || 'Neue Aufgabe',
+                                start: startDate ? new Date(startDate.split('.').reverse().join('-')) : new Date(),
+                                duration: parseInt(duration) || 5,
+                                progress: parseInt(progress) || 0,
+                                assignee: assignee || 'Nicht zugewiesen',
+                                priority: priority || 'Mittel',
+                                dependencies: [],
+                                milestone: milestone ? new Date(milestone.split('.').reverse().join('-')) : null,
+                                children: [],
+                                expanded: true
+                            };
+                            
+                            const taskLevel = parseInt(level) || 0;
+                            
+                            taskMap.set(task.id, { task, level: taskLevel });
+                        });
+                        
+                        // Build hierarchy
+                        const tasksArray = Array.from(taskMap.values());
+                        const rootTasks = [];
+                        
+                        tasksArray.forEach(({ task, level }) => {
+                            if (level === 0) {
+                                rootTasks.push(task);
+                            } else {
+                                // Find parent (last task with level-1)
+                                for (let i = tasksArray.length - 1; i >= 0; i--) {
+                                    if (tasksArray[i].level === level - 1 && tasksArray[i].task.id < task.id) {
+                                        const parent = findTaskById(rootTasks, tasksArray[i].task.id);
+                                        if (parent) {
+                                            parent.children.push(task);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        if (rootTasks.length > 0) {
+                            setTasks(rootTasks);
+                            alert(`${rootTasks.length} Hauptaufgaben erfolgreich importiert!`);
+                        } else {
+                            alert('Keine gültigen Aufgaben in der CSV-Datei gefunden.');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        alert('Fehler beim Importieren der CSV-Datei. Bitte überprüfen Sie das Format.');
+                    }
+                };
+                
+                reader.readAsText(file);
+                event.target.value = ''; // Reset file input
+            };
+
+            const findTaskById = (taskList, id) => {
+                for (const task of taskList) {
+                    if (task.id === id) return task;
+                    if (task.children) {
+                        const found = findTaskById(task.children, id);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            const saveToLocalStorage = () => {
+                localStorage.setItem('projektplan-aufgaben', JSON.stringify(tasks));
+                localStorage.setItem('projektplan-kommentare', JSON.stringify(comments));
+                alert('Projekt erfolgreich gespeichert!');
+            };
+
+            useEffect(() => {
+                const savedTasks = localStorage.getItem('projektplan-aufgaben');
+                const savedComments = localStorage.getItem('projektplan-kommentare');
+                const savedProjectInfo = localStorage.getItem('projectInfo');
+                
+                if (savedTasks) {
+                    try {
+                        const parsedTasks = JSON.parse(savedTasks);
+                        const convertDates = (taskList) => {
+                            return taskList.map(task => ({
+                                ...task,
+                                start: new Date(task.start),
+                                milestone: task.milestone ? new Date(task.milestone) : null,
+                                children: task.children ? convertDates(task.children) : []
+                            }));
+                        };
+                        setTasks(convertDates(parsedTasks));
+                    } catch (e) {
+                        console.error('Fehler beim Laden der Aufgaben:', e);
+                    }
+                }
+                
+                if (savedComments) {
+                    try {
+                        const parsedComments = JSON.parse(savedComments);
+                        const convertedComments = {};
+                        Object.keys(parsedComments).forEach(key => {
+                            convertedComments[key] = parsedComments[key].map(comment => ({
+                                ...comment,
+                                timestamp: new Date(comment.timestamp)
+                            }));
+                        });
+                        setComments(convertedComments);
+                    } catch (e) {
+                        console.error('Fehler beim Laden der Kommentare:', e);
+                    }
+                }
+                
+                if (savedProjectInfo) {
+                    try {
+                        setProjectInfo(JSON.parse(savedProjectInfo));
+                    } catch (e) {
+                        console.error('Fehler beim Laden der Projektinformationen:', e);
+                    }
+                }
+            }, []);
+
+            return (
+                <div className="w-full h-screen bg-gray-50 flex flex-col" ref={printRef}>
+                    {/* Header */}
+                    <div className="bg-white border-b border-gray-200 px-6 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <h1 className="text-2xl font-bold text-gray-900">Aqua<span className="text-blue-600">|</span>Plus</h1>
+                                <div className="flex space-x-2 items-center no-print">
+                                    <button
+                                        onClick={() => setShowProjectInfo(true)}
+                                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                        title="Projektinformationen"
+                                    >
+                                        <MoreVertical />
+                                    </button>
+                                    <button
+                                        onClick={() => addTask()}
+                                        className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                        title="Neue Aufgabe"
+                                    >
+                                        <Plus />
+                                    </button>
+                                    <button 
+                                        onClick={saveToLocalStorage}
+                                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                        title="Speichern"
+                                    >
+                                        <Save />
+                                    </button>
+                                    <button 
+                                        onClick={exportToCSV}
+                                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                        title="Export"
+                                    >
+                                        <Download />
+                                    </button>
+                                    <button 
+                                        onClick={() => fileInputRef.current.click()}
+                                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                        title="Import"
+                                    >
+                                        <Upload />
+                                    </button>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={importFromCSV}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <button 
+                                        onClick={handlePrintToPDF}
+                                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition"
+                                        title="Drucken"
+                                    >
+                                        <Printer />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="absolute left-1/2 transform -translate-x-1/2">
+                                <h1 className="text-2xl font-bold text-gray-900">Terminplanung</h1>
+                            </div>
+                            
+                            <div className="flex items-center space-x-4 no-print">
+                                <div className="text-sm text-gray-700 border-r border-gray-300 pr-4">
+                                    {new Date().toLocaleDateString('de-DE', { 
+                                        weekday: 'short', 
+                                        year: 'numeric', 
+                                        month: '2-digit', 
+                                        day: '2-digit' 
+                                    })}
+                                </div>
+                                
+                                <select
+                                    value={viewMode}
+                                    onChange={(e) => setViewMode(e.target.value)}
+                                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="days">Tage</option>
+                                    <option value="weeks">Wochen</option>
+                                    <option value="months">Monate</option>
+                                </select>
+                                
+                                <select
+                                    value={filterPriority}
+                                    onChange={(e) => setFilterPriority(e.target.value)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="all">Alle Prioritäten</option>
+                                    <option value="Hoch">Hohe Priorität</option>
+                                    <option value="Mittel">Mittlere Priorität</option>
+                                    <option value="Niedrig">Niedrige Priorität</option>
+                                </select>
+                                
+                                <button 
+                                    onClick={() => setShowTeamOverview(true)}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                    title="Team Übersicht"
+                                >
+                                    <Users />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Print-only Project Info Header */}
+                    <div className="hidden print:block bg-gray-50 border-b border-gray-300 px-6 py-3">
+                        <div className="flex items-center justify-between text-sm">
+                            <div className="flex space-x-6">
+                                {projectInfo.projektcode && (
+                                    <div>
+                                        <span className="font-semibold text-gray-700">Projektcode:</span>
+                                        <span className="ml-2 text-gray-900">{projectInfo.projektcode}</span>
+                                    </div>
+                                )}
+                                {projectInfo.projekt && (
+                                    <div>
+                                        <span className="font-semibold text-gray-700">Projekt:</span>
+                                        <span className="ml-2 text-gray-900">{projectInfo.projekt}</span>
+                                    </div>
+                                )}
+                                {projectInfo.kunde && (
+                                    <div>
+                                        <span className="font-semibold text-gray-700">Kunde:</span>
+                                        <span className="ml-2 text-gray-900">{projectInfo.kunde}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex space-x-6">
+                                {projectInfo.pm && (
+                                    <div>
+                                        <span className="font-semibold text-gray-700">PM:</span>
+                                        <span className="ml-2 text-gray-900">{projectInfo.pm}</span>
+                                    </div>
+                                )}
+                                {projectInfo.liefertermin && (
+                                    <div>
+                                        <span className="font-semibold text-gray-700">Liefertermin:</span>
+                                        <span className="ml-2 text-gray-900">{projectInfo.liefertermin}</span>
+                                    </div>
+                                )}
+                                {projectInfo.ort && (
+                                    <div>
+                                        <span className="font-semibold text-gray-700">Ort:</span>
+                                        <span className="ml-2 text-gray-900">{projectInfo.ort}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Project Info Modal */}
+                    {showProjectInfo && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 no-print">
+                            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                    <h2 className="text-lg font-bold text-gray-900">Projektinformationen</h2>
+                                    <button
+                                        onClick={() => setShowProjectInfo(false)}
+                                        className="w-6 h-6 rounded hover:bg-red-100 flex items-center justify-center text-gray-500 hover:text-red-600"
+                                        title="Schließen"
+                                    >
+                                        <X />
+                                    </button>
+                                </div>
+                                
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Projektcode</label>
+                                        <input
+                                            type="text"
+                                            value={projectInfo.projektcode}
+                                            onChange={(e) => setProjectInfo({...projectInfo, projektcode: e.target.value})}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Projekt</label>
+                                        <input
+                                            type="text"
+                                            value={projectInfo.projekt}
+                                            onChange={(e) => setProjectInfo({...projectInfo, projekt: e.target.value})}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Kunde</label>
+                                        <input
+                                            type="text"
+                                            value={projectInfo.kunde}
+                                            onChange={(e) => setProjectInfo({...projectInfo, kunde: e.target.value})}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">PM</label>
+                                        <input
+                                            type="text"
+                                            value={projectInfo.pm}
+                                            onChange={(e) => setProjectInfo({...projectInfo, pm: e.target.value})}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Liefertermin</label>
+                                        <input
+                                            type="date"
+                                            value={projectInfo.liefertermin}
+                                            onChange={(e) => setProjectInfo({...projectInfo, liefertermin: e.target.value})}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Ort</label>
+                                        <div className="flex space-x-2">
+                                            <input
+                                                type="text"
+                                                value={projectInfo.ort}
+                                                onChange={(e) => setProjectInfo({...projectInfo, ort: e.target.value})}
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Stadt, Land"
+                                            />
+                                            {projectInfo.ort && (
+                                                <a
+                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(projectInfo.ort)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+                                                    title="In Google Maps öffnen"
+                                                >
+                                                    🗺️
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                                    <button
+                                        onClick={() => {
+                                            // Save project info to localStorage
+                                            localStorage.setItem('projectInfo', JSON.stringify(projectInfo));
+                                            setShowProjectInfo(false);
+                                        }}
+                                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center"
+                                        title="Speichern"
+                                    >
+                                        <Save />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Team Overview Modal */}
+                    {showTeamOverview && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 no-print">
+                            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[600px] flex flex-col">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                    <h2 className="text-lg font-bold text-gray-900">Team Übersicht</h2>
+                                    <button
+                                        onClick={() => setShowTeamOverview(false)}
+                                        className="w-6 h-6 rounded hover:bg-red-100 flex items-center justify-center text-gray-500 hover:text-red-600"
+                                        title="Schließen"
+                                    >
+                                        <X />
+                                    </button>
+                                </div>
+                                
+                                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                    {Object.keys(getTeamStats()).length === 0 ? (
+                                        <div className="text-center py-8 text-gray-500">
+                                            <div className="flex justify-center mb-2">
+                                                <Users />
+                                            </div>
+                                            <p className="text-sm font-medium">Keine Beauftragten zugewiesen</p>
+                                            <p className="text-xs mt-1">Weisen Sie Aufgaben Teammitgliedern zu.</p>
+                                        </div>
+                                    ) : (
+                                        Object.entries(getTeamStats()).map(([member, stats]) => (
+                                        <div key={member} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                                        {member.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-sm font-semibold text-gray-900">{member}</h3>
+                                                        <p className="text-xs text-gray-500">{stats.total} {stats.total === 1 ? 'Aufgabe' : 'Aufgaben'}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xl font-bold text-gray-900">{stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%</p>
+                                                    <p className="text-xs text-gray-500">Fertig</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-3 gap-2 text-center">
+                                                <div className="bg-green-50 rounded p-2">
+                                                    <div className="text-lg font-bold text-green-600">{stats.completed}</div>
+                                                    <div className="text-xs text-green-700">Fertig</div>
+                                                </div>
+                                                <div className="bg-yellow-50 rounded p-2">
+                                                    <div className="text-lg font-bold text-yellow-600">{stats.inProgress}</div>
+                                                    <div className="text-xs text-yellow-700">Läuft</div>
+                                                </div>
+                                                <div className="bg-gray-50 rounded p-2">
+                                                    <div className="text-lg font-bold text-gray-600">{stats.notStarted}</div>
+                                                    <div className="text-xs text-gray-700">Offen</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                    )}
+                                </div>
+                                
+                                <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                                    <button
+                                        onClick={() => setShowTeamOverview(false)}
+                                        className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        Schließen
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main Content */}
+                    <div className="flex-1 flex overflow-hidden">
+                        {/* Task List Panel */}
+                        <div className="w-[692px] bg-white border-r border-gray-200 flex flex-col print-full-width">
+                            <div className="px-4 border-b border-gray-200 bg-gray-50" style={{ height: '72px' }}>
+                                <div className="flex items-center h-full text-sm text-gray-700">
+                                    <div className="w-8 pr-2 border-r border-gray-300">ID</div>
+                                    <div className="w-72 px-2 border-r border-gray-300">Aufgabe</div>
+                                    <div className="w-20 px-2 border-r border-gray-300">Dauer</div>
+                                    <div className="w-28 px-2 border-r border-gray-300">Beauftragter</div>
+                                    <div className="w-20 px-2 border-r border-gray-300">Beginn</div>
+                                    <div className="w-20 px-2">Ende</div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto">
+                                {flatTasks
+                                    .filter(task => filterPriority === 'all' || task.priority === filterPriority)
+                                    .map((task) => (
+                                        <div
+                                            key={task.id}
+                                            className={`px-4 border-b border-gray-100 hover:bg-blue-50 cursor-pointer ${
+                                                selectedTask?.id === task.id ? 'bg-blue-100' : ''
+                                            }`}
+                                            style={{ height: '48px' }}
+                                            onClick={() => setSelectedTask(task)}
+                                        >
+                                            <div className="flex items-center h-full">
+                                                <div className="w-8 pr-2 text-xs text-gray-600">
+                                                    {task.id}
+                                                </div>
+                                                
+                                                <div className="w-72 px-2 relative">
+                                                    <div className="flex items-center">
+                                                        {/* Fixed width space for chevron - always present but invisible if no children */}
+                                                        <div className="flex-shrink-0" style={{ width: `${task.level * 24 + 24}px` }}>
+                                                            {task.children && task.children.length > 0 && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        toggleExpand(task.id);
+                                                                    }}
+                                                                    className="p-1 hover:bg-gray-200 rounded no-print float-right"
+                                                                >
+                                                                    {task.expanded ? <ChevronDown /> : <ChevronRight />}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium text-gray-900 truncate">{task.name}</div>
+                                                            <div className="flex items-center space-x-2 mt-1">
+                                                                <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
+                                                                <div className="text-xs text-gray-500">{task.progress}%</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="w-20 px-2 text-xs text-gray-600">
+                                                    {task.duration} {task.duration === 1 ? 'Tag' : 'Tage'}
+                                                </div>
+                                                
+                                                <div className="w-28 px-2 text-xs text-gray-600 truncate">
+                                                    {task.assignee}
+                                                </div>
+                                                
+                                                <div className="w-20 px-2 text-xs text-gray-600">
+                                                    {formatDate(task.start, 'long')}
+                                                </div>
+                                                
+                                                <div className="w-20 px-2 text-xs text-gray-600">
+                                                    {(() => {
+                                                        const endDate = new Date(task.start);
+                                                        endDate.setDate(endDate.getDate() + task.duration);
+                                                        return formatDate(endDate, 'long');
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+
+                        {/* Gantt Chart */}
+                        <div className="flex-1 bg-white overflow-auto gantt-chart">
+                            <div className="min-w-max">
+                                {/* Simple Year Text Row - no borders, no boxes */}
+                                <div className="flex text-sm font-bold text-gray-800 bg-white" style={{ height: '24px' }}>
+                                    {timeline.map((date, idx) => {
+                                        const cellWidth = viewMode === 'days' ? 40 : viewMode === 'weeks' ? 80 : 120;
+                                        const day = date.getDate();
+                                        const weekNum = getISOWeek(date);
+                                        const isoYear = getISOWeekYear(date);
+                                        
+                                        // Show year on the 15th of each month for days view
+                                        // Show year every 5 weeks starting from week 1 for weeks view (1, 6, 11, 16, 21, etc.)
+                                        const showYear = viewMode === 'days' ? day === 15 : 
+                                                        viewMode === 'weeks' ? (weekNum % 5 === 1) : 
+                                                        false;
+                                        
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className="flex items-center justify-center"
+                                                style={{ width: `${cellWidth}px` }}
+                                            >
+                                                {showYear ? (viewMode === 'weeks' ? isoYear : date.getFullYear()) : ''}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                
+                                {/* Date/Week/Month Row */}
+                                <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ height: '48px' }}>
+                                    <div className="flex h-full">
+                                        {timeline.map((date, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="border-r border-gray-200 px-2 flex flex-col items-center justify-center text-center"
+                                                style={{ width: viewMode === 'days' ? '40px' : viewMode === 'weeks' ? '80px' : '120px' }}
+                                            >
+                                                <div className="text-xs font-semibold text-gray-700">
+                                                    {viewMode === 'days' && formatDate(date)}
+                                                    {viewMode === 'weeks' && `KW${getISOWeek(date)}`}
+                                                    {viewMode === 'months' && date.toLocaleDateString('de-DE', { month: 'short' })}
+                                                </div>
+                                                {viewMode === 'days' && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {date.toLocaleDateString('de-DE', { weekday: 'short' })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    {flatTasks
+                                        .filter(task => filterPriority === 'all' || task.priority === filterPriority)
+                                        .map((task) => {
+                                            const { left, width } = getTaskPosition(task);
+                                            return (
+                                                <div
+                                                    key={task.id}
+                                                    className="relative border-b border-gray-100"
+                                                    style={{ height: '48px' }}
+                                                >
+                                                    <div className="absolute inset-0 flex">
+                                                        {timeline.map((_, timeIdx) => (
+                                                            <div
+                                                                key={timeIdx}
+                                                                className="border-r border-gray-100"
+                                                                style={{ width: viewMode === 'days' ? '40px' : viewMode === 'weeks' ? '80px' : '120px' }}
+                                                            />
+                                                        ))}
+                                                    </div>
+
+                                                    <div
+                                                        className="absolute top-2 h-8 rounded-lg shadow-sm cursor-move hover:shadow-md transition"
+                                                        style={{
+                                                            left: `${left}px`,
+                                                            width: `${Math.max(width, 20)}px`,
+                                                            backgroundColor: task.children && task.children.length > 0 ? '#6366f1' : '#3b82f6'
+                                                        }}
+                                                        onClick={() => setSelectedTask(task)}
+                                                    >
+                                                        <div className="h-full flex items-center justify-between px-2">
+                                                            <span className="text-xs text-white font-medium truncate">
+                                                                {task.name}
+                                                            </span>
+                                                            <span className="text-xs text-white font-semibold">
+                                                                {task.progress}%
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <div
+                                                            className="absolute bottom-0 left-0 h-1 bg-green-400 rounded-bl-lg"
+                                                            style={{ width: `${task.progress}%` }}
+                                                        />
+                                                    </div>
+
+                                                    {task.milestone && (
+                                                        <div
+                                                            className="absolute top-1/2 -translate-y-1/2 z-20"
+                                                            style={{ left: `${getMilestonePosition(task.milestone)}px` }}
+                                                            title={`Meilenstein: ${formatDate(task.milestone, 'long')}`}
+                                                        >
+                                                            <div className="relative">
+                                                                <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg" />
+                                                                <div className="absolute top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500 text-white text-xs px-2 py-1 rounded shadow-lg">
+                                                                    {formatDate(task.milestone)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {task.dependencies && task.dependencies.map(depId => {
+                                                        const depTask = flatTasks.find(t => t.id === depId);
+                                                        if (!depTask) return null;
+                                                        
+                                                        const depPos = getTaskPosition(depTask);
+                                                        return (
+                                                            <svg
+                                                                key={depId}
+                                                                className="absolute top-0 left-0 pointer-events-none"
+                                                                style={{ width: '100%', height: '100%' }}
+                                                            >
+                                                                <line
+                                                                    x1={depPos.left + depPos.width}
+                                                                    y1={24}
+                                                                    x2={left}
+                                                                    y2={24}
+                                                                    stroke="#94a3b8"
+                                                                    strokeWidth="2"
+                                                                    markerEnd="url(#arrowhead)"
+                                                                />
+                                                            </svg>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            </div>
+
+                            <svg width="0" height="0">
+                                <defs>
+                                    <marker
+                                        id="arrowhead"
+                                        markerWidth="10"
+                                        markerHeight="10"
+                                        refX="9"
+                                        refY="3"
+                                        orient="auto"
+                                    >
+                                        <polygon points="0 0, 10 3, 0 6" fill="#94a3b8" />
+                                    </marker>
+                                </defs>
+                            </svg>
+                        </div>
+
+                        {/* Details Panel */}
+                        {selectedTask && (
+                            <div className="w-80 bg-white border-l border-gray-200 flex flex-col no-print">
+                                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-semibold text-gray-900">Aufgabendetails</h3>
+                                        <button
+                                            onClick={() => setSelectedTask(null)}
+                                            className="w-6 h-6 rounded hover:bg-red-100 flex items-center justify-center text-gray-500 hover:text-red-600"
+                                            title="Schließen"
+                                        >
+                                            <X />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
+                                        <input
+                                            type="number"
+                                            value={selectedTask.id}
+                                            onChange={(e) => {
+                                                const newId = parseInt(e.target.value);
+                                                if (!isNaN(newId) && newId > 0) {
+                                                    const oldId = selectedTask.id;
+                                                    
+                                                    // Check if newId already exists in another task
+                                                    const isDuplicate = flatTasks.some(t => t.id === newId && t.id !== oldId);
+                                                    
+                                                    if (isDuplicate) {
+                                                        // Prevent duplicate ID - reset the input
+                                                        e.target.value = oldId;
+                                                        return;
+                                                    }
+                                                    
+                                                    // Update the task with new ID
+                                                    const updateTasksWithNewId = (taskList) => {
+                                                        return taskList.map(task => {
+                                                            if (task.id === oldId) {
+                                                                return { ...task, id: newId };
+                                                            }
+                                                            if (task.children) {
+                                                                return { ...task, children: updateTasksWithNewId(task.children) };
+                                                            }
+                                                            return task;
+                                                        });
+                                                    };
+                                                    setTasks(updateTasksWithNewId(tasks));
+                                                    setSelectedTask({ ...selectedTask, id: newId });
+                                                }
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        {(() => {
+                                            const duplicates = flatTasks.filter(t => t.id === selectedTask.id);
+                                            if (duplicates.length > 1) {
+                                                return (
+                                                    <div className="flex items-center mt-1 text-xs text-red-600">
+                                                        <AlertCircle />
+                                                        <span className="ml-1">⚠️ Warnung: Doppelte ID gefunden! ({duplicates.length} Aufgaben)</span>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Aufgabenname</label>
+                                        <input
+                                            type="text"
+                                            value={selectedTask.name}
+                                            onChange={(e) => updateTask(selectedTask.id, { name: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Startdatum</label>
+                                            <input
+                                                type="date"
+                                                value={new Date(selectedTask.start).toISOString().split('T')[0]}
+                                                onChange={(e) => updateTask(selectedTask.id, { start: new Date(e.target.value) })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Dauer (Tage)</label>
+                                            <input
+                                                type="number"
+                                                value={selectedTask.duration}
+                                                onChange={(e) => updateTask(selectedTask.id, { duration: parseInt(e.target.value) || 0 })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Meilenstein (optional)</label>
+                                        <input
+                                            type="date"
+                                            value={selectedTask.milestone ? new Date(selectedTask.milestone).toISOString().split('T')[0] : ''}
+                                            onChange={(e) => updateTask(selectedTask.id, { milestone: e.target.value ? new Date(e.target.value) : null })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Wird als roter Kreis im Kalender angezeigt</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fortschritt (%)</label>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={selectedTask.progress}
+                                            onChange={(e) => updateTask(selectedTask.id, { progress: parseInt(e.target.value) })}
+                                            className="w-full"
+                                        />
+                                        <div className="text-center text-sm text-gray-600 mt-1">{selectedTask.progress}%</div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Beauftragter</label>
+                                        <input
+                                            type="text"
+                                            list="assignee-list"
+                                            value={selectedTask.assignee}
+                                            onChange={(e) => updateTask(selectedTask.id, { assignee: e.target.value })}
+                                            placeholder="Name eingeben..."
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <datalist id="assignee-list">
+                                            {Array.from(new Set(flatTasks.map(t => t.assignee).filter(a => a && a !== 'Nicht zugewiesen'))).sort().map(name => (
+                                                <option key={name} value={name} />
+                                            ))}
+                                            <option value="Ilja Kotov" />
+                                            <option value="Ralf Stüber" />
+                                            <option value="Jock Bartolo" />
+                                            <option value="Hammel Jorge" />
+                                        </datalist>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
+                                        <select
+                                            value={selectedTask.priority}
+                                            onChange={(e) => updateTask(selectedTask.id, { priority: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            <option value="Hoch">Hoch</option>
+                                            <option value="Mittel">Mittel</option>
+                                            <option value="Niedrig">Niedrig</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-gray-200">
+                                        <div className="flex items-center space-x-2 mb-3">
+                                            <MessageSquare />
+                                            <h4 className="font-medium text-gray-900">Kommentare</h4>
+                                        </div>
+
+                                        <div className="space-y-3 mb-4">
+                                            {(comments[selectedTask.id] || []).map(comment => (
+                                                <div key={comment.id} className="bg-gray-50 rounded-lg p-3">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-sm font-medium text-gray-900">{comment.author}</span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {new Date(comment.timestamp).toLocaleTimeString('de-DE')}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-700">{comment.text}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex space-x-2">
+                                            <input
+                                                type="text"
+                                                value={newComment}
+                                                onChange={(e) => setNewComment(e.target.value)}
+                                                onKeyPress={(e) => e.key === 'Enter' && addComment(selectedTask.id)}
+                                                placeholder="Kommentar hinzufügen..."
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                                onClick={() => addComment(selectedTask.id)}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                            >
+                                                Senden
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => addTask(selectedTask.id)}
+                                        className="w-full flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                                    >
+                                        <Plus />
+                                        <span className="ml-2">Unteraufgabe hinzufügen</span>
+                                    </button>
+                                </div>
+                                
+                                {/* Action Buttons Footer */}
+                                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 space-y-2">
+                                    <button
+                                        onClick={() => {
+                                            // Save action - data is auto-saved on change
+                                            setSelectedTask(null);
+                                        }}
+                                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center"
+                                    >
+                                        <Save />
+                                        <span className="ml-2">Speichern</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm(`Aufgabe "${selectedTask.name}" wirklich löschen?`)) {
+                                                deleteTask(selectedTask.id);
+                                            }
+                                        }}
+                                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center justify-center"
+                                    >
+                                        <Trash2 />
+                                        <span className="ml-2">Löschen</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Status Bar */}
+                    <div className="bg-white border-t border-gray-200 px-6 py-2 no-print">
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                            <div className="flex items-center space-x-4">
+                                <span>{flatTasks.length} {flatTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'}</span>
+                                <span className="flex items-center">
+                                    <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                                    {flatTasks.filter(t => t.progress === 100).length} abgeschlossen
+                                </span>
+                                <span className="flex items-center">
+                                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2" />
+                                    {flatTasks.filter(t => t.progress > 0 && t.progress < 100).length} in Arbeit
+                                </span>
+                                <span className="flex items-center">
+                                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2" />
+                                    {flatTasks.filter(t => t.milestone).length} Meilensteine
+                                </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <AlertCircle />
+                                <span>Automatisch gespeichert um {new Date().toLocaleTimeString('de-DE')}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<ProjectManager />, document.getElementById('root'));
+    </script>
+</body>
+</html>
