@@ -219,6 +219,14 @@
             </svg>
         );
 
+        const HelpCircle = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        );
+
         const ProjectManager = () => {
             const [tasks, setTasks] = useState([
                 {
@@ -276,6 +284,8 @@
             const [newComment, setNewComment] = useState('');
             const [showTeamOverview, setShowTeamOverview] = useState(false);
             const [showProjectInfo, setShowProjectInfo] = useState(false);
+            const [showHelp, setShowHelp] = useState(false);
+            const [helpSection, setHelpSection] = useState('overview');
             const [projectInfo, setProjectInfo] = useState({
                 projektcode: '',
                 projekt: '',
@@ -800,6 +810,13 @@
                                     >
                                         <Printer />
                                     </button>
+                                    <button 
+                                        onClick={() => setShowHelp(true)}
+                                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                                        title="Hilfe"
+                                    >
+                                        <HelpCircle />
+                                    </button>
                                 </div>
                             </div>
                             
@@ -1079,6 +1096,663 @@
                                     >
                                         Schließen
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Help Modal */}
+                    {showHelp && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 no-print">
+                            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-blue-50 rounded-t-lg">
+                                    <h2 className="text-xl font-bold text-gray-900">Hilfe - Aqua|Plus Terminplanung</h2>
+                                    <button
+                                        onClick={() => setShowHelp(false)}
+                                        className="w-8 h-8 rounded hover:bg-red-100 flex items-center justify-center text-gray-500 hover:text-red-600"
+                                        title="Schließen"
+                                    >
+                                        <X />
+                                    </button>
+                                </div>
+                                
+                                <div className="flex flex-1 overflow-hidden">
+                                    {/* Index/Navigation */}
+                                    <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+                                        <div className="p-4">
+                                            <h3 className="text-sm font-bold text-gray-700 mb-3">Inhaltsverzeichnis</h3>
+                                            <nav className="space-y-1">
+                                                <button
+                                                    onClick={() => setHelpSection('overview')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'overview' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    1. Überblick
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('getting-started')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'getting-started' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    2. Erste Schritte
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('project-info')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'project-info' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    3. Projektinformationen
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('tasks')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'tasks' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    4. Aufgaben verwalten
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('gantt')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'gantt' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    5. Gantt-Diagramm
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('team')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'team' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    6. Team-Verwaltung
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('import-export')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'import-export' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    7. Import & Export
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('multi-user')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'multi-user' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    8. Mehrere Benutzer
+                                                </button>
+                                                <button
+                                                    onClick={() => setHelpSection('tips')}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                                                        helpSection === 'tips' 
+                                                            ? 'bg-blue-600 text-white font-semibold' 
+                                                            : 'text-gray-700 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    9. Tipps & Tricks
+                                                </button>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Content Area */}
+                                    <div className="flex-1 overflow-y-auto p-6">
+                                        {helpSection === 'overview' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">1. Überblick</h3>
+                                                <p className="text-gray-700">
+                                                    Willkommen bei der Aqua|Plus Terminplanung! Diese Anwendung ermöglicht es Ihnen, 
+                                                    Projekte zu planen, Aufgaben zu verwalten und den Fortschritt im Gantt-Diagramm zu visualisieren.
+                                                </p>
+                                                
+                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                    <h4 className="font-semibold text-blue-900 mb-2">Hauptfunktionen:</h4>
+                                                    <ul className="list-disc list-inside space-y-1 text-blue-800 text-sm">
+                                                        <li>Projektinformationen verwalten</li>
+                                                        <li>Aufgaben mit Unteraufgaben erstellen</li>
+                                                        <li>Gantt-Diagramm mit Zeitachse</li>
+                                                        <li>Team-Übersicht und Zuweisungen</li>
+                                                        <li>Meilensteine markieren</li>
+                                                        <li>CSV-Import und -Export</li>
+                                                        <li>PDF-Druckfunktion</li>
+                                                        <li>Automatische Speicherung im Browser</li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                                    <h4 className="font-semibold text-yellow-900 mb-2">⚠️ Wichtig:</h4>
+                                                    <p className="text-yellow-800 text-sm">
+                                                        Alle Daten werden lokal in Ihrem Browser gespeichert. Sichern Sie Ihre Projekte 
+                                                        regelmäßig durch CSV-Export, um Datenverlust zu vermeiden.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'getting-started' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">2. Erste Schritte</h3>
+                                                
+                                                <div className="space-y-3">
+                                                    <h4 className="text-lg font-semibold text-gray-800">Schritt 1: Projektinformationen eingeben</h4>
+                                                    <p className="text-gray-700">
+                                                        Klicken Sie auf das <strong>⋮</strong> Symbol oben links, um die Projektinformationen zu öffnen. 
+                                                        Geben Sie Projektcode, Name, Kunde, Projektmanager und weitere Details ein.
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <h4 className="text-lg font-semibold text-gray-800">Schritt 2: Erste Aufgabe erstellen</h4>
+                                                    <p className="text-gray-700">
+                                                        Klicken Sie auf das <strong>+</strong> Symbol, um eine neue Aufgabe hinzuzufügen. 
+                                                        Die Aufgabe erscheint in der Liste links.
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <h4 className="text-lg font-semibold text-gray-800">Schritt 3: Aufgabe bearbeiten</h4>
+                                                    <p className="text-gray-700">
+                                                        Klicken Sie auf eine Aufgabe, um sie auszuwählen. Das Detail-Panel rechts zeigt 
+                                                        alle Eigenschaften der Aufgabe an und ermöglicht Bearbeitung.
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <h4 className="text-lg font-semibold text-gray-800">Schritt 4: Ansicht anpassen</h4>
+                                                    <p className="text-gray-700">
+                                                        Wählen Sie oben rechts zwischen <strong>Tage</strong>, <strong>Wochen</strong> oder 
+                                                        <strong>Monate</strong> Ansicht für das Gantt-Diagramm.
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <h4 className="text-lg font-semibold text-gray-800">Schritt 5: Speichern</h4>
+                                                    <p className="text-gray-700">
+                                                        Klicken Sie auf das <strong>💾</strong> Symbol, um Ihre Änderungen im Browser zu speichern. 
+                                                        Die Anwendung speichert auch automatisch.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'project-info' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">3. Projektinformationen</h3>
+                                                
+                                                <p className="text-gray-700">
+                                                    Die Projektinformationen enthalten wichtige Metadaten zu Ihrem Projekt.
+                                                </p>
+                                                
+                                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800">Projektcode</h4>
+                                                        <p className="text-sm text-gray-600">Eindeutige Kennung für das Projekt (z.B. AQ-2025-001)</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800">Projekt</h4>
+                                                        <p className="text-sm text-gray-600">Projektname - erscheint im Haupttitel "Terminplanung - Projekt [Name]"</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800">Kunde</h4>
+                                                        <p className="text-sm text-gray-600">Name des Auftraggebers</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800">PM (Projektmanager)</h4>
+                                                        <p className="text-sm text-gray-600">Verantwortlicher Projektleiter</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800">Liefertermin</h4>
+                                                        <p className="text-sm text-gray-600">Geplantes Projektende oder Lieferdatum</p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800">Ort</h4>
+                                                        <p className="text-sm text-gray-600">Projektstandort - Mit 🗺️ Button in Google Maps öffnen</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                    <p className="text-sm text-blue-800">
+                                                        <strong>Tipp:</strong> Diese Informationen werden beim PDF-Druck mit ausgegeben 
+                                                        und helfen bei der Dokumentation Ihrer Projekte.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'tasks' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">4. Aufgaben verwalten</h3>
+                                                
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Neue Aufgabe erstellen</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Klicken Sie auf das <strong>+</strong> Symbol in der Symbolleiste, um eine Hauptaufgabe zu erstellen.
+                                                        </p>
+                                                        <p className="text-gray-700">
+                                                            Für Unteraufgaben: Wählen Sie eine Aufgabe aus und klicken Sie im Detail-Panel auf 
+                                                            <strong>"Unteraufgabe hinzufügen"</strong>.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Aufgabe bearbeiten</h4>
+                                                        <p className="text-gray-700">Klicken Sie auf eine Aufgabe, um das Detail-Panel zu öffnen. Folgende Eigenschaften können bearbeitet werden:</p>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 mt-2 ml-4">
+                                                            <li><strong>Aufgabenname:</strong> Beschreibung der Aufgabe</li>
+                                                            <li><strong>Startdatum:</strong> Wann die Aufgabe beginnt</li>
+                                                            <li><strong>Dauer:</strong> Anzahl der Tage</li>
+                                                            <li><strong>Fortschritt:</strong> Slider von 0% bis 100%</li>
+                                                            <li><strong>Beauftragter:</strong> Freie Texteingabe mit Autocomplete</li>
+                                                            <li><strong>Priorität:</strong> Hoch (rot), Mittel (gelb), Niedrig (grün)</li>
+                                                            <li><strong>Meilenstein:</strong> Optional ein wichtiges Datum markieren</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Aufgabe löschen</h4>
+                                                        <p className="text-gray-700">
+                                                            Wählen Sie die Aufgabe aus und klicken Sie im Detail-Panel auf das 
+                                                            <strong>🗑️</strong> Papierkorb-Symbol.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Hierarchie und Unteraufgaben</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Aufgaben können beliebig viele Unteraufgaben haben. Klicken Sie auf die 
+                                                            <strong>▼</strong> oder <strong>▶</strong> Symbole, um Unteraufgaben ein-/auszublenden.
+                                                        </p>
+                                                        <p className="text-gray-700">
+                                                            Eingerückte Aufgaben sind Unteraufgaben der darüberliegenden Hauptaufgabe.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'gantt' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">5. Gantt-Diagramm</h3>
+                                                
+                                                <p className="text-gray-700 mb-4">
+                                                    Das Gantt-Diagramm visualisiert Ihre Aufgaben auf einer Zeitachse und zeigt Abhängigkeiten 
+                                                    sowie Meilensteine an.
+                                                </p>
+                                                
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Aufgabenbalken</h4>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li><strong>Blaue Balken:</strong> Normale Aufgaben</li>
+                                                            <li><strong>Lila Balken:</strong> Aufgaben mit Unteraufgaben (Hauptaufgaben)</li>
+                                                            <li><strong>Grüner Streifen:</strong> Zeigt den Fortschritt (0-100%)</li>
+                                                            <li><strong>Balkenlänge:</strong> Entspricht der Dauer in Tagen</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Meilensteine</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Meilensteine werden als <strong>rote Kreise 🔴</strong> im Gantt-Diagramm dargestellt.
+                                                        </p>
+                                                        <p className="text-gray-700">
+                                                            Um einen Meilenstein zu setzen: Wählen Sie die Aufgabe aus und geben Sie im Detail-Panel 
+                                                            ein Datum im Feld "Meilenstein" ein.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Zeitachsen-Ansichten</h4>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li><strong>Tage:</strong> Detaillierte Ansicht, jede Spalte = 1 Tag</li>
+                                                            <li><strong>Wochen:</strong> Mittelfristige Planung, KW-Nummern angezeigt</li>
+                                                            <li><strong>Monate:</strong> Langfristige Übersicht, Monatsansicht</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Navigation</h4>
+                                                        <p className="text-gray-700">
+                                                            Scrollen Sie horizontal im Gantt-Bereich, um frühere oder spätere Zeiträume anzuzeigen. 
+                                                            Die Zeitachse passt sich automatisch an Ihre Aufgaben an.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'team' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">6. Team-Verwaltung</h3>
+                                                
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Team-Übersicht öffnen</h4>
+                                                        <p className="text-gray-700">
+                                                            Klicken Sie auf das <strong>👥</strong> Symbol oben rechts, um die Team-Übersicht zu öffnen.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Teammitglieder zuweisen</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Im Detail-Panel einer Aufgabe finden Sie das Feld <strong>"Beauftragter"</strong>.
+                                                        </p>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Sie können <strong>jeden beliebigen Namen</strong> eingeben - die Anwendung ist flexibel 
+                                                            und lernt neue Namen automatisch.
+                                                        </p>
+                                                        <p className="text-gray-700">
+                                                            Während Sie tippen, erscheinen Vorschläge (Autocomplete) mit bereits verwendeten Namen.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Team-Statistiken</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Die Team-Übersicht zeigt für jedes Teammitglied:
+                                                        </p>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li><strong>Avatar:</strong> Initialen des Namens</li>
+                                                            <li><strong>Gesamtanzahl:</strong> Zugewiesene Aufgaben</li>
+                                                            <li><strong>Fertigstellungsgrad:</strong> Prozent abgeschlossener Aufgaben</li>
+                                                            <li><strong>Fertig:</strong> Anzahl 100% abgeschlossener Aufgaben (grün)</li>
+                                                            <li><strong>Läuft:</strong> Aufgaben in Arbeit, 1-99% (gelb)</li>
+                                                            <li><strong>Offen:</strong> Noch nicht begonnene Aufgaben, 0% (grau)</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                        <p className="text-sm text-blue-800">
+                                                            <strong>Tipp:</strong> Die Team-Übersicht aktualisiert sich automatisch, 
+                                                            sobald Sie neue Namen als Beauftragte hinzufügen oder Fortschritte aktualisieren.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'import-export' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">7. Import & Export</h3>
+                                                
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">CSV-Export</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Klicken Sie auf das <strong>⬇️</strong> Download-Symbol, um Ihre Daten als CSV-Datei zu exportieren.
+                                                        </p>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Die CSV-Datei enthält alle Aufgaben mit:
+                                                        </p>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li>ID und Hierarchie</li>
+                                                            <li>Aufgabennamen</li>
+                                                            <li>Start- und Enddatum</li>
+                                                            <li>Dauer und Fortschritt</li>
+                                                            <li>Beauftragte</li>
+                                                            <li>Priorität</li>
+                                                            <li>Meilensteine</li>
+                                                        </ul>
+                                                        <p className="text-gray-700 mt-2">
+                                                            Der Dateiname enthält Projektcode und Zeitstempel: 
+                                                            <code className="bg-gray-100 px-1 rounded">projektcode_YYYYMMDD_HHMMSS.csv</code>
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">CSV-Import</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Klicken Sie auf das <strong>⬆️</strong> Upload-Symbol und wählen Sie eine CSV-Datei aus.
+                                                        </p>
+                                                        <p className="text-gray-700 mb-2">
+                                                            <strong className="text-red-600">⚠️ Achtung:</strong> Der Import <strong>ersetzt</strong> alle 
+                                                            aktuellen Aufgaben. Exportieren Sie vorher Ihre Daten, wenn Sie sie behalten möchten!
+                                                        </p>
+                                                        <p className="text-gray-700">
+                                                            Die CSV-Datei muss das gleiche Format haben wie beim Export.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">PDF-Druck</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Klicken Sie auf das <strong>🖨️</strong> Drucker-Symbol, um eine PDF-Ansicht zu öffnen.
+                                                        </p>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Im Browser-Druckdialog:
+                                                        </p>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li>Wählen Sie "Als PDF speichern"</li>
+                                                            <li>Format: Querformat (Landscape)</li>
+                                                            <li>Seitengröße: A2 empfohlen für beste Lesbarkeit</li>
+                                                        </ul>
+                                                        <p className="text-gray-700 mt-2">
+                                                            Das PDF enthält die komplette Aufgabenliste und das Gantt-Diagramm.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                                        <h4 className="font-semibold text-yellow-900 mb-2">💡 Empfohlener Backup-Workflow:</h4>
+                                                        <ol className="list-decimal list-inside space-y-1 text-yellow-800 text-sm">
+                                                            <li>Exportieren Sie Ihre Daten wöchentlich als CSV</li>
+                                                            <li>Speichern Sie CSV-Dateien in der Cloud (Google Drive, etc.)</li>
+                                                            <li>Benennen Sie Dateien sinnvoll (Projekt + Datum)</li>
+                                                            <li>Erstellen Sie PDF-Snapshots für wichtige Meilensteine</li>
+                                                        </ol>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'multi-user' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">8. Mehrere Benutzer</h3>
+                                                
+                                                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                                    <h4 className="font-semibold text-green-900 mb-2">✅ Funktioniert für separate Projekte!</h4>
+                                                    <p className="text-green-800 text-sm">
+                                                        Mehrere Personen können die Anwendung gleichzeitig nutzen, wenn jeder sein 
+                                                        <strong> eigenes Projekt</strong> verwaltet.
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Wie es funktioniert</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            <strong>Person A</strong> arbeitet an "Projekt Klärwerk" auf ihrem Computer<br />
+                                                            <strong>Person B</strong> arbeitet an "Projekt Pumpstation" auf ihrem Computer<br />
+                                                            <strong>Person C</strong> arbeitet an "Projekt Rohrleitungen" auf ihrem Computer
+                                                        </p>
+                                                        <p className="text-gray-700">
+                                                            Jede Person hat ihre <strong>eigenen Daten</strong>, die im Browser gespeichert werden. 
+                                                            Es gibt <strong>keine Konflikte</strong> zwischen den Projekten.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Daten bleiben lokal</h4>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li>Daten werden im <strong>Browser-Speicher</strong> (localStorage) gespeichert</li>
+                                                            <li>Jeder Computer/Browser hat <strong>eigene Daten</strong></li>
+                                                            <li><strong>Keine Synchronisation</strong> zwischen Benutzern</li>
+                                                            <li>Jeder arbeitet <strong>unabhängig</strong></li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Daten zwischen Computern übertragen</h4>
+                                                        <p className="text-gray-700 mb-2">
+                                                            Wenn Sie <strong>dasselbe Projekt auf einem anderen Computer</strong> öffnen möchten:
+                                                        </p>
+                                                        <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li>Exportieren Sie auf Computer A als CSV</li>
+                                                            <li>Senden Sie die CSV-Datei per E-Mail oder Cloud-Speicher</li>
+                                                            <li>Importieren Sie auf Computer B die CSV-Datei</li>
+                                                        </ol>
+                                                    </div>
+                                                    
+                                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                                        <h4 className="font-semibold text-yellow-900 mb-2">⚠️ Nicht geeignet für:</h4>
+                                                        <ul className="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                                            <li>Mehrere Personen arbeiten am <strong>gleichen Projekt</strong> gleichzeitig</li>
+                                                            <li>Echtzeit-Zusammenarbeit im Team</li>
+                                                            <li>Zentrale Datenbank mit Zugriffskontrolle</li>
+                                                        </ul>
+                                                        <p className="text-yellow-800 text-sm mt-2">
+                                                            Für Team-Kollaboration: Eine Person sollte als "Projekt-Koordinator" fungieren 
+                                                            und den Master-Terminplan pflegen.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Daten-Persistenz</h4>
+                                                        <p className="text-gray-700 mb-2"><strong>Ihre Daten bleiben erhalten:</strong></p>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li>✅ Nach Browser-Neustart</li>
+                                                            <li>✅ Nach Computer-Neustart</li>
+                                                            <li>✅ Beim erneuten Öffnen der Seite</li>
+                                                        </ul>
+                                                        <p className="text-gray-700 mb-2 mt-3"><strong>Ihre Daten gehen verloren:</strong></p>
+                                                        <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                                            <li>❌ Wenn Browser-Cache gelöscht wird</li>
+                                                            <li>❌ Wenn Browser deinstalliert wird</li>
+                                                            <li>❌ Im Inkognito-/Privat-Modus</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {helpSection === 'tips' && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">9. Tipps & Tricks</h3>
+                                                
+                                                <div className="space-y-4">
+                                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                        <h4 className="font-semibold text-blue-900 mb-2">Effizienter arbeiten</h4>
+                                                        <ul className="list-disc list-inside space-y-2 text-blue-800 text-sm">
+                                                            <li><strong>Hierarchie nutzen:</strong> Gliedern Sie große Projekte in Haupt- und Unteraufgaben</li>
+                                                            <li><strong>Prioritäten setzen:</strong> Markieren Sie kritische Aufgaben als "Hoch"</li>
+                                                            <li><strong>Meilensteine:</strong> Markieren Sie wichtige Deadlines als Meilensteine</li>
+                                                            <li><strong>Fortschritt aktualisieren:</strong> Halten Sie den Fortschrittsbalken aktuell für genaue Team-Statistiken</li>
+                                                            <li><strong>Ansicht wechseln:</strong> Nutzen Sie Tagesansicht für Details, Monatsansicht für Übersicht</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                                        <h4 className="font-semibold text-green-900 mb-2">Datensicherheit</h4>
+                                                        <ul className="list-disc list-inside space-y-2 text-green-800 text-sm">
+                                                            <li><strong>Regelmäßig exportieren:</strong> Erstellen Sie wöchentlich CSV-Backups</li>
+                                                            <li><strong>Cloud-Speicher:</strong> Laden Sie Backups in Google Drive oder ähnliche Dienste hoch</li>
+                                                            <li><strong>Versionierung:</strong> Benennen Sie Exports mit Datum, z.B. "Projekt_2025-11-17.csv"</li>
+                                                            <li><strong>Vor Browser-Updates:</strong> Exportieren Sie sicherheitshalber vor großen Browser-Updates</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                                        <h4 className="font-semibold text-purple-900 mb-2">Präsentationen</h4>
+                                                        <ul className="list-disc list-inside space-y-2 text-purple-800 text-sm">
+                                                            <li><strong>PDF für Meetings:</strong> Erstellen Sie vor Besprechungen eine PDF-Version</li>
+                                                            <li><strong>Querformat wählen:</strong> Im Druckdialog "Landscape" für bessere Lesbarkeit</li>
+                                                            <li><strong>A2-Format:</strong> Größeres Format für Projektion oder Ausdruck</li>
+                                                            <li><strong>Projektinfo ausfüllen:</strong> Vollständige Infos erscheinen im PDF-Header</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                                        <h4 className="font-semibold text-yellow-900 mb-2">Tastaturkürzel</h4>
+                                                        <ul className="list-disc list-inside space-y-2 text-yellow-800 text-sm">
+                                                            <li><strong>Enter im Kommentarfeld:</strong> Kommentar direkt absenden</li>
+                                                            <li><strong>Click auf Aufgabe:</strong> Details-Panel öffnen</li>
+                                                            <li><strong>Pfeil-Buttons (▼/▶):</strong> Unteraufgaben ein-/ausblenden</li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Häufige Fragen</h4>
+                                                        
+                                                        <div className="space-y-3">
+                                                            <div className="border-l-4 border-blue-500 pl-3">
+                                                                <p className="font-semibold text-gray-800">F: Wo werden meine Daten gespeichert?</p>
+                                                                <p className="text-sm text-gray-600">A: Lokal in Ihrem Browser (localStorage). Keine Cloud, keine Server.</p>
+                                                            </div>
+                                                            
+                                                            <div className="border-l-4 border-blue-500 pl-3">
+                                                                <p className="font-semibold text-gray-800">F: Kann ich die Anwendung offline nutzen?</p>
+                                                                <p className="text-sm text-gray-600">A: Ja, nach dem ersten Laden funktioniert sie offline. Nur für Hilfe & Updates wird Internet benötigt.</p>
+                                                            </div>
+                                                            
+                                                            <div className="border-l-4 border-blue-500 pl-3">
+                                                                <p className="font-semibold text-gray-800">F: Wie füge ich Abhängigkeiten hinzu?</p>
+                                                                <p className="text-sm text-gray-600">A: Derzeit werden Abhängigkeiten automatisch durch die Hierarchie visualisiert. Manuelle Abhängigkeiten können in CSV bearbeitet werden.</p>
+                                                            </div>
+                                                            
+                                                            <div className="border-l-4 border-blue-500 pl-3">
+                                                                <p className="font-semibold text-gray-800">F: Kann ich Aufgaben per Drag & Drop verschieben?</p>
+                                                                <p className="text-sm text-gray-600">A: Aktuell nein - bearbeiten Sie Start und Dauer im Detail-Panel.</p>
+                                                            </div>
+                                                            
+                                                            <div className="border-l-4 border-blue-500 pl-3">
+                                                                <p className="font-semibold text-gray-800">F: Meine Daten sind weg - was tun?</p>
+                                                                <p className="text-sm text-gray-600">A: Importieren Sie Ihr letztes CSV-Backup. Daher: Regelmäßig exportieren!</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="text-sm text-gray-600">
+                                            Version 1.0 - Aqua|Plus Terminplanung
+                                        </div>
+                                        <button
+                                            onClick={() => setShowHelp(false)}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                        >
+                                            Schließen
+                                        </button>
+                                    </div>
+                                    <div className="text-center border-t border-gray-300 pt-3">
+                                        <p className="text-xs text-gray-500">
+                                            © {new Date().getFullYear()} Aqua|Plus. Alle Rechte vorbehalten.
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Entwickelt von Thang Nguyen
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
