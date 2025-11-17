@@ -804,7 +804,14 @@
                             </div>
                             
                             <div className="absolute left-1/2 transform -translate-x-1/2">
-                                <h1 className="text-2xl font-bold text-gray-900">Terminplanung</h1>
+                                <h1 className="text-2xl font-bold text-gray-900">
+                                    Terminplanung
+                                    {projectInfo.projekt && (
+                                        <span className="ml-2 text-blue-600">
+                                            - Projekt {projectInfo.projekt}
+                                        </span>
+                                    )}
+                                </h1>
                             </div>
                             
                             <div className="flex items-center space-x-4 no-print">
